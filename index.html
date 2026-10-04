@@ -1,0 +1,247 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Number Pattern Lab</title>
+<style>
+:root{--bg:#f3f5f7;--panel:#fff;--fg:#14202b;--mute:#5b6b7a;--line:#d5dce3;--accent:#0b6e6e;--accent-fg:#fff;--warn:#9a5b00;--ok:#1d6b3a;--flag:#a3261f;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;--sans:"IBM Plex Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1519;--panel:#172027;--fg:#e6edf2;--mute:#93a3b1;--line:#2a3742;--accent:#4fc3c3;--accent-fg:#06201f;--warn:#e0a84a;--ok:#6fcf97;--flag:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1519;--panel:#172027;--fg:#e6edf2;--mute:#93a3b1;--line:#2a3742;--accent:#4fc3c3;--accent-fg:#06201f;--warn:#e0a84a;--ok:#6fcf97;--flag:#ff8a80;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;padding-inline:16px;padding-block:24px;line-height:1.5}
+main{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-size:1.6rem;margin:0;text-wrap:balance}
+h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:0 0 8px}
+p{margin:0}
+section{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.note{border-left:3px solid var(--warn)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--mute)}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px;min-width:0}
+textarea{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:.85rem;height:150px;resize:vertical}
+button{font:inherit;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);border-radius:4px;padding:8px 14px;font-weight:600}
+button.ghost{background:transparent;color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+ul{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+li{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);border-radius:4px;padding:6px 10px;font-family:var(--mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+li button{padding:3px 10px;font-size:.8rem}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;border:1px solid currentColor;font-size:.75rem;font-weight:600}
+.warn{color:var(--warn)}.ok{color:var(--ok)}.flag{color:var(--flag)}
+.hint{color:var(--mute);font-size:.85rem}
+.verdict{font-size:1.02rem}
+#chk{font-family:var(--mono);font-size:.9rem;margin-top:10px;display:flex;flex-direction:column;gap:2px}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<main>
+<h1>Number Pattern Lab</h1>
+
+<section id="verdictBox" class="note"><h2>Result on your samples</h2><p class="verdict" id="verdict">Running tests…</p></section>
+
+<section><h2>Your samples</h2>
+<p class="hint">Paste more numbers to re-run every test. Numbering such as "12." is ignored, and rows that do not have exactly 17 digits are skipped. More samples make the tests sharper: 54 can only reveal strong structure, a few hundred can reveal subtle structure.</p>
+<textarea id="data" spellcheck="false" aria-label="Samples, one per line"></textarea>
+<div class="row" style="margin-top:10px"><button id="run">Run tests</button><button id="reset" class="ghost">Restore the 56 originals</button><span class="hint" id="count"></span></div>
+</section>
+
+<section><h2>Tests</h2><div class="tw"><table><thead><tr><th>Test</th><th>Observed</th><th>Chance of this by luck</th><th>Result</th></tr></thead><tbody id="tests"></tbody></table></div>
+<p class="hint" style="margin-top:10px">A test is flagged only when its chance of happening by luck is below 0.5%, which already allows for running ten tests at once. Borderline means below 5%: with ten tests, one or two of these are expected from luck alone. The checksum row compares the best rule found with the best rule found on scrambled data.</p></section>
+
+<section><h2>Generate</h2>
+<div class="row">
+<label for="n">How many<input id="n" type="number" min="1" max="200" value="5"></label>
+<label for="mode">Model<select id="mode"><option value="uniform">Uniform random</option><option value="matched">Matched to samples</option></select></label>
+<label for="sep">Separator<select id="sep"><option value=" ">Space</option><option value="-">Dash</option><option value="">None</option></select></label>
+<button id="go">Generate</button><button id="all" class="ghost">Copy all</button>
+</div>
+<p class="hint" id="modeNote" style="margin-top:8px"></p>
+<ul id="out"></ul></section>
+
+<section><h2>Check one number</h2>
+<label for="one">Enter 17 digits<input id="one" inputmode="numeric" placeholder="9380 9832 0539 65140"></label>
+<div id="chk"></div></section>
+</main>
+<script>
+const ORIGINAL=["9380 9832 0539 65140","3464 2972 9327 30473","6238 8916 9244 87515","3126 7674 4455 38350","0981 7602 0217 36166","9666 2916 8075 78234","5107 1866 5692 95686","1338 6424 8105 43388","4737 2848 2798 39534","8498 9191 6810 12500","5225 5164 6111 51262","6713 5161 9389 17062","4900 4181 7347 78246","9294 0496 8230 13531","6119 4994 6382 13108","1128 1751 0769 80004","0920 9144 4897 09028","3055 5962 4805 66669","0595 7703 3333 70951","1812 7188 4138 32546","5053 1262 7655 47196","4421 2693 6182 94729","0020 9776 3117 60755","6770 2586 0397 23637","5095 6222 3795 63297","6127 3593 5641 8071","5425 2967 2952 01915","1261 6186 8095 59105","1810 2071 7777 42220","3977 7103 1471 26033","5150 6462 1252 32583","9451 9885 9386 17168","8061 6875 5977 72235","0435 8644 5801 91907","5629 5238 4108 94713","4777 2750 7178 67346","4428 2091 7787 49097","3420 33433 0346 27751","7511 1658 6568 71431","8838 2513 9751 13999","4770 9839 3907 94797","3111 5734 1638 52231","4050 3030 2248 21672","0518 1330 9616 53135","2067 2531 4565 79587","1884 7423 9430 25550","4838 9025 3459 89765","9673 3438 5479 98417","1446 7897 4609 04925","4660 5460 0665 54841","9604 2234 6761 24709","5445 8660 2699 40602","1233 9979 1889 75786","5270 5677 0480 51887","0970 7662 6899 75967","8157 3476 4963 33913"];
+const $=id=>document.getElementById(id);
+let D=[];            // valid samples as digit arrays
+let nullDistinct=[]; // per group, null distribution of distinct digits
+const GR=[[0,4],[4,8],[8,12],[12,17]];
+const rnd=()=>Math.random()*10|0;
+const known=()=>new Set(D.map(d=>d.join('')));
+
+function parse(text){
+  const good=[];let skipped=0;
+  text.split(/\n/).forEach(l=>{
+    l=l.replace(/^\s*\d+[.)]\s+/,'').trim();if(!l)return;
+    const d=l.replace(/\D/g,'');
+    if(d.length===17)good.push(d.split('').map(Number));else skipped++;
+  });
+  return {good,skipped};
+}
+function luhn(d){let t=0;for(let i=0;i<d.length;i++){let v=d[d.length-1-i];if(i%2){v*=2;if(v>9)v-=9}t+=v}return t%10===0}
+function distinct(a){return new Set(a).size}
+
+/* statistic functions: each takes an array of 17-digit rows, larger = more unusual */
+const TESTS=[
+ {name:'Digit balance in each position',
+  fn:T=>{let s=0;const n=T.length,e=n/10;for(let p=0;p<17;p++){const c=Array(10).fill(0);T.forEach(r=>c[r[p]]++);c.forEach(x=>s+=(x-e)**2/e)}return s},
+  show:v=>'χ² '+v.toFixed(0)+' (about 153 expected)'},
+ {name:'Dependence between any two positions',
+  fn:T=>{const n=T.length;let tot=0,k=0;for(let i=0;i<17;i++)for(let j=i+1;j<17;j++){const t=new Float64Array(100),a=Array(10).fill(0),b=Array(10).fill(0);T.forEach(r=>{t[r[i]*10+r[j]]++;a[r[i]]++;b[r[j]]++});let s=0;for(let x=0;x<10;x++)for(let y=0;y<10;y++){const e=a[x]*b[y]/n;if(e>0)s+=(t[x*10+y]-e)**2/e}tot+=s;k++}return tot/k},
+  show:v=>'average χ² '+v.toFixed(1)+' (about 81 expected)'},
+ {name:'Few different digits per number',
+  fn:T=>-T.reduce((s,r)=>s+distinct(r),0)/T.length,
+  show:v=>(-v).toFixed(2)+' different digits on average'},
+ {name:'Groups containing a repeated digit',
+  fn:T=>{let c=0;T.forEach(r=>GR.forEach(([a,b])=>{if(distinct(r.slice(a,b))<b-a)c++}));return c/T.length},
+  show:v=>v.toFixed(2)+' of 4 groups per number'},
+ {name:'Runs of 4 or more equal digits',
+  fn:T=>T.reduce((s,r)=>{let m=1,c=1;for(let i=1;i<17;i++){c=r[i]===r[i-1]?c+1:1;m=Math.max(m,c)}return s+(m>=4)},0),
+  show:v=>v+' numbers'},
+ {name:'Same digit twice in a row',
+  fn:T=>T.reduce((s,r)=>{for(let i=1;i<17;i++)if(r[i]===r[i-1])s++;return s},0),
+  show:(v,n)=>v+' times (about '+(n*1.6).toFixed(0)+' expected)'},
+ {name:'Luhn check passing rate',
+  fn:T=>Math.abs(T.filter(luhn).length/T.length-0.1),
+  show:(v,n,T)=>T.filter(luhn).length+' of '+n+' (about 10% by chance)'},
+ {name:'Whole number remainder bias (3, 7, 9, 11, 13)',
+  fn:T=>{let s=0;[3,7,9,11,13].forEach(m=>{const c=Array(m).fill(0);T.forEach(r=>{let x=0;r.forEach(d=>x=(x*10+d)%m);c[x]++});const e=T.length/m;c.forEach(v=>s+=(v-e)**2/e/(m-1))});return s},
+  show:v=>'score '+v.toFixed(1)+' (about 5 expected)'},
+ {name:'Link from one sample to the next',
+  fn:T=>{const s=T.map(r=>r.reduce((a,b)=>a+b,0)),m=s.reduce((a,b)=>a+b,0)/s.length;let num=0,den=0;s.forEach((x,i)=>{den+=(x-m)**2;if(i)num+=(x-m)*(s[i-1]-m)});return den?Math.abs(num/den):0},
+  show:v=>'correlation '+v.toFixed(2)},
+ {name:'Exact duplicate numbers',
+  fn:T=>T.length-new Set(T.map(r=>r.join(''))).size,
+  show:v=>v+' duplicates'}
+];
+
+function erfcinv(){}
+function mcP(test,T,trials){
+  const obs=test.fn(T);let c=0;
+  for(let t=0;t<trials;t++){
+    const R=[];for(let i=0;i<T.length;i++){const r=new Array(17);for(let j=0;j<17;j++)r[j]=rnd();R.push(r)}
+    if(test.fn(R)>=obs)c++;
+  }
+  return {obs,p:(c+1)/(trials+1)};
+}
+
+/* search for a check-digit rule: weighted sum of the first 16 digits with a repeating weight pattern */
+function bestRule(T){
+  let best=0,info='';
+  for(const m of [10,11])for(let p=1;p<=3;p++){
+    const total=Math.pow(m,p);
+    for(let code=0;code<total;code++){
+      const w=[];let x=code;for(let k=0;k<p;k++){w.push(x%m);x=Math.floor(x/m)}
+      if(p>1&&w.every(v=>v===w[0]))continue;
+      let a=0,b=0;
+      for(const r of T){let s=0;for(let i=0;i<16;i++)s+=r[i]*w[i%p];const d=s%m,e=(m-d)%m;if(d===r[16])a++;if(e===r[16])b++}
+      if(a>best){best=a;info='mod '+m+', weights '+w.join(',')+', sum'}
+      if(b>best){best=b;info='mod '+m+', weights '+w.join(',')+', complement'}
+    }
+  }
+  return {best,info};
+}
+
+function analyse(){
+  const {good,skipped}=parse($('data').value);
+  D=good;const n=D.length;
+  $('count').textContent=n+' usable samples'+(skipped?', '+skipped+' skipped (not 17 digits)':'');
+  const body=$('tests');body.innerHTML='';
+  if(n<10){$('verdict').textContent='Add at least 10 samples with 17 digits each.';return}
+  const flagged=[];
+  const trials=n>400?150:400;
+  TESTS.forEach(t=>{
+    const {obs,p}=mcP(t,D,trials);
+    const f=p<0.005;if(f)flagged.push(t.name);
+    addRow(t.name,t.show(obs,n,D),p<=1/(trials+1)?'< '+(100/(trials+1)).toFixed(2)+'%':(p*100).toFixed(1)+'%',f,p);
+  });
+  let ruleFound=null;
+  if(n>=15){
+    const real=bestRule(D);
+    const sh=D.map(r=>r.slice());const last=sh.map(r=>r[16]);for(let i=last.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[last[i],last[j]]=[last[j],last[i]]}sh.forEach((r,i)=>r[16]=last[i]);
+    const ctl=bestRule(sh);
+    const f=real.best>=0.9*n;
+    if(f){flagged.push('Check digit rule');ruleFound=real.info}
+    addRow('Last digit follows a weighted-sum rule',real.best+' of '+n+' match ('+real.info+')','scrambled data also reaches '+ctl.best+' of '+n,f);
+  }
+  const v=$('verdict');
+  if(!flagged.length)v.textContent='Nothing flagged. These '+n+' samples are consistent with every digit being drawn independently and evenly. No hidden rule, check digit or sequence was found, so the uniform model is the best supported description.';
+  else v.textContent='Flagged: '+flagged.join('; ')+'. '+(ruleFound?'A check-digit rule was found ('+ruleFound+'). ':'')+'The "Matched to samples" model reproduces repeat-digit effects; it cannot reproduce a hidden rule.';
+  buildMatched();
+  updateNote();
+}
+function addRow(name,obs,pTxt,flag,p){
+  const tr=document.createElement('tr');
+  tr.innerHTML='<td></td><td class="n"></td><td class="n"></td><td></td>';
+  tr.children[0].textContent=name;tr.children[1].textContent=obs;tr.children[2].textContent=pTxt;
+  const s=document.createElement('span');const bl=!flag&&p!==undefined&&p<0.05;s.className='pill '+(flag?'flag':bl?'warn':'ok');s.textContent=flag?'Flagged':bl?'Borderline':'Normal';tr.children[3].append(s);
+  $('tests').append(tr);
+}
+
+/* matched model: each group keeps the observed spread of repeated digits */
+let accept=null;
+function buildMatched(){
+  accept=GR.map(([a,b])=>{
+    const L=b-a,nul=Array(L+1).fill(0),obs=Array(L+1).fill(0);
+    for(let t=0;t<20000;t++){const g=[];for(let i=0;i<L;i++)g.push(rnd());nul[distinct(g)]++}
+    D.forEach(r=>obs[distinct(r.slice(a,b))]++);
+    const w=nul.map((c,k)=>{
+      const pn=c/20000,po=obs[k]/D.length;
+      const target=0.5*pn+0.5*po;               // shrink toward chance: few samples, weak evidence
+      return pn>0?target/pn:0;
+    });
+    const mx=Math.max(...w);return w.map(x=>x/mx);
+  });
+}
+function secureDigits(k){const a=new Uint32Array(k);crypto.getRandomValues(a);return Array.from(a,v=>v%10)}
+function group(i,mode){
+  const [a,b]=GR[i],L=b-a;
+  for(;;){
+    const g=secureDigits(L);
+    if(mode==='uniform'||!accept)return g;
+    const u=new Uint32Array(1);crypto.getRandomValues(u);
+    if(u[0]/4294967296<accept[i][distinct(g)])return g;
+  }
+}
+function make(sep,mode){
+  const K=known();let s;
+  do{s=[0,1,2,3].map(i=>group(i,mode))}while(K.has(s.flat().join('')));
+  return s.map(g=>g.join('')).join(sep);
+}
+function updateNote(){
+  $('modeNote').textContent=$('mode').value==='uniform'
+   ?'Every digit is drawn independently and evenly. Numbers already in your samples are never repeated.'
+   :'Each group keeps the same mix of repeated and different digits as your samples, blended halfway with pure chance. This is a weak statistical fit, not a recovered rule.';
+}
+const out=$('out');
+function copy(t,b){const ok=()=>{if(b){const o=b.textContent;b.textContent='Copied';setTimeout(()=>b.textContent=o,900)}};
+ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(ok,()=>{const r=document.createRange();r.selectNodeContents(out);getSelection().removeAllRanges();getSelection().addRange(r)})}
+function gen(){
+  const n=Math.max(1,Math.min(200,+$('n').value||1)),sep=$('sep').value,mode=$('mode').value;
+  out.innerHTML='';
+  for(let i=0;i<n;i++){const v=make(sep,mode),li=document.createElement('li'),s=document.createElement('span'),b=document.createElement('button');
+   s.textContent=v;b.textContent='Copy';b.className='ghost';b.onclick=()=>copy(v,b);li.append(s,b);out.append(li)}
+}
+function check(){
+  const d=$('one').value.replace(/\D/g,''),box=$('chk');box.innerHTML='';
+  if(!d)return;
+  const line=t=>{const p=document.createElement('div');p.textContent=t;box.append(p)};
+  if(d.length!==17){line('Needs 17 digits, found '+d.length+'.');return}
+  const a=d.split('').map(Number);
+  line('Layout: '+[d.slice(0,4),d.slice(4,8),d.slice(8,12),d.slice(12)].join(' '));
+  line('Luhn check: '+(luhn(a)?'passes':'fails'));
+  line('Repeated digits per group: '+GR.map(([x,y])=>(y-x)-distinct(a.slice(x,y))).join(', '));
+  let best=0,at=-1;D.forEach((r,i)=>{const k=r.filter((v,j)=>v===a[j]).length;if(k>best){best=k;at=i}});
+  line(D.length?'Closest sample matches '+best+' of 17 positions'+(best===17?' (identical)':''):'No samples loaded');
+}
+$('run').onclick=analyse;
+$('reset').onclick=()=>{$('data').value=ORIGINAL.join('\n');analyse();gen()};
+$('go').onclick=gen;$('mode').onchange=()=>{updateNote();gen()};
+$('all').onclick=function(){copy([...out.querySelectorAll('li span')].map(s=>s.textContent).join('\n'),this)};
+$('one').oninput=check;
+$('data').value=ORIGINAL.join('\n');
+analyse();gen();
+</script>
+
+</body></html>
